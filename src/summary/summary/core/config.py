@@ -50,6 +50,7 @@ class Settings(BaseSettings):
     llm_model: str
 
     # Transcription processing
+    transcription_mode: str = "whisperx"  # "openai" or "whisperx"
     hallucination_patterns: List[str] = ["Vap'n'Roll Thierry"]
 
     # Webhook-related settings

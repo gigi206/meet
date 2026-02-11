@@ -129,7 +129,7 @@ def format_transcript(
     Returns a (content, title) tuple.
     """
     locale = get_locale(context_language, language)
-    formatter = TranscriptFormatter(locale)
+    formatter = TranscriptFormatter(locale, transcription_mode=settings.transcription_mode)
 
     return formatter.format(
         transcription,

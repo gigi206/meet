@@ -21,8 +21,9 @@ class TranscriptFormatter:
     - Generating descriptive titles from context
     """
 
-    def __init__(self, locale: LocaleStrings):
+    def __init__(self, locale: LocaleStrings, transcription_mode="whisperx"):
         """Initialize formatter with settings and locale."""
+        self.transcription_mode = transcription_mode
         self.hallucination_patterns = settings.hallucination_patterns
         self._locale = locale
 
@@ -36,6 +37,14 @@ class TranscriptFormatter:
 
         return None
 
+    def _format_openai(self, transcription) -> Optional[str]:
+        """Extract plain text from an OpenAI transcription response."""
+        if hasattr(transcription, "text"):
+            return transcription.text
+        if isinstance(transcription, dict):
+            return transcription.get("text")
+        return None
+
     def format(
         self,
         transcription,
@@ -45,14 +54,22 @@ class TranscriptFormatter:
         download_link: Optional[str] = None,
     ) -> Tuple[str, str]:
         """Format transcription into the final document and its title."""
-        segments = self._get_segments(transcription)
-
-        if not segments:
-            content = self._locale.empty_transcription
+        if self.transcription_mode == "openai":
+            text = self._format_openai(transcription)
+            if not text or not text.strip():
+                content = self._locale.empty_transcription
+            else:
+                content = text
+                content = self._remove_hallucinations(content)
+                content = self._add_header(content, download_link)
         else:
-            content = self._format_speaker(segments)
-            content = self._remove_hallucinations(content)
-            content = self._add_header(content, download_link)
+            segments = self._get_segments(transcription)
+            if not segments:
+                content = self._locale.empty_transcription
+            else:
+                content = self._format_speaker(segments)
+                content = self._remove_hallucinations(content)
+                content = self._add_header(content, download_link)
 
         title = self._generate_title(room, recording_date, recording_time)
 

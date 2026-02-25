@@ -73,7 +73,7 @@ def transcribe_audio(task_id, filename, language):
         max_retries=settings.whisperx_max_retries,
     )
 
-    # Transcription
+    transcription = None
     try:
         with file_service.prepare_audio_file(filename) as (audio_file, metadata):
             metadata_manager.track(task_id, {"audio_length": metadata["duration"]})
@@ -92,23 +92,40 @@ def transcribe_audio(task_id, filename, language):
 
             transcription_start_time = time.time()
 
-            transcription = whisperx_client.audio.transcriptions.create(
-                model=settings.whisperx_asr_model, file=audio_file, language=language
-            )
+            try:
+                transcription = whisperx_client.audio.transcriptions.create(
+                    model=settings.whisperx_asr_model,
+                    file=audio_file,
+                    language=language,
+                )
+            except openai.APIError as exc:
+                logger.warning(
+                    "Transcription failed (API error %s) for %s, "
+                    "continuing without transcription to allow "
+                    "meet2twake file delivery.",
+                    exc.status_code if hasattr(exc, "status_code") else type(exc).__name__,
+                    filename,
+                )
 
-            transcription_time = round(time.time() - transcription_start_time, 2)
-            metadata_manager.track(
-                task_id,
-                {"transcription_time": transcription_time},
-            )
-            logger.info("Transcription received in %.2f seconds.", transcription_time)
-            logger.debug("Transcription: \n %s", transcription)
+            if transcription is not None:
+                transcription_time = round(
+                    time.time() - transcription_start_time, 2
+                )
+                metadata_manager.track(
+                    task_id,
+                    {"transcription_time": transcription_time},
+                )
+                logger.info(
+                    "Transcription received in %.2f seconds.", transcription_time
+                )
+                logger.debug("Transcription: \n %s", transcription)
 
     except FileServiceException:
         logger.exception("Unexpected error for filename: %s", filename)
         return None
 
-    metadata_manager.track_transcription_metadata(task_id, transcription)
+    if transcription is not None:
+        metadata_manager.track_transcription_metadata(task_id, transcription)
     return transcription
 
 

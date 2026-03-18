@@ -26,7 +26,7 @@ class SessionExchangeSerializer(serializers.Serializer):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 @throttle_classes([SessionExchangeAnonRateThrottle])
-def session_exchange(request):
+def session_exchange(request):  # NOSONAR (S3752) POST-only, AllowAny is intentional: single-use code with 30s TTL and rate limiting
     """Exchange a one-time code for a session ID.
 
     The code was generated during the OIDC callback and stored in cache

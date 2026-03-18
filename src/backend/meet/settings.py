@@ -344,6 +344,11 @@ class Base(Configuration):
                 environ_name="CREATION_CALLBACK_THROTTLE_RATES",
                 environ_prefix=None,
             ),
+            "session_exchange": values.Value(
+                default="5/minute",
+                environ_name="SESSION_EXCHANGE_THROTTLE_RATES",
+                environ_prefix=None,
+            ),
         },
     }
     MONITORED_THROTTLE_FAILURE_CALLBACK = (

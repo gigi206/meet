@@ -464,7 +464,7 @@ class Base(Configuration):
     )
 
     # OIDC - Authorization Code Flow
-    OIDC_AUTHENTICATE_CLASS = "lasuite.oidc_login.views.OIDCAuthenticationRequestView"
+    OIDC_AUTHENTICATE_CLASS = "core.authentication.views.OIDCAuthenticationRequestView"
     OIDC_CALLBACK_CLASS = "core.authentication.views.OIDCAuthenticationCallbackView"
 
     # Custom URL schemes allowed for native app OIDC redirects.
